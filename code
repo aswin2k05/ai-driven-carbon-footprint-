@@ -1,0 +1,111 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.model_selection import train_test_split
+
+# Function to get input from the user
+def get_user_input():
+    print("Welcome to the Carbon Footprint Calculator!")
+    print("Please enter the following monthly data:")
+    
+    energy_kwh = float(input("1. Enter your monthly energy consumption in kilowatt-hours (kWh): "))
+    travel_km = float(input("2. Enter your total travel distance in kilometers (km): "))
+    waste_kg = float(input("3. Enter the amount of waste you generate in kilograms (kg): "))
+    
+    return energy_kwh, travel_km, waste_kg
+
+# Define carbon emission factors for each category
+factors = {
+    'energy_kwh': 0.233,    # kg CO2 per kWh
+    'travel_km': 0.21,      # kg CO2 per km
+    'waste_kg': 1.5         # kg CO2 per kg of waste
+}
+
+# Function to manually calculate emissions using the factors
+def calculate_emissions(energy_kwh, travel_km, waste_kg):
+    energy_emissions = energy_kwh * factors['energy_kwh']
+    travel_emissions = travel_km * factors['travel_km']
+    waste_emissions = waste_kg * factors['waste_kg']
+    
+    total_emissions = energy_emissions + travel_emissions + waste_emissions
+    
+    return total_emissions
+
+# Create a dataset (simulated data for training)
+data = {
+    'energy_kwh': [1000, 1500, 1200, 1300, 1800, 1100, 1700],
+    'travel_km':  [200, 300, 250, 280, 400, 150, 350],
+    'waste_kg':   [50, 70, 60, 65, 90, 45, 85],
+    'emissions_kg': [0] * 7  # Placeholder to be updated
+}
+
+# Convert data into a pandas DataFrame
+df = pd.DataFrame(data)
+
+# Calculate emissions for each row in the DataFrame
+df['emissions_kg'] = (
+    df['energy_kwh'] * factors['energy_kwh'] +
+    df['travel_km'] * factors['travel_km'] +
+    df['waste_kg'] * factors['waste_kg']
+)
+
+# Separate features (X) and target variable (y)
+X = df[['energy_kwh', 'travel_km', 'waste_kg']]
+y = df['emissions_kg']
+
+# Split data into training and testing sets (70% train, 30% test)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# Create and train the Linear Regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict emissions on test set
+y_pred = model.predict(X_test)
+
+# Evaluate the model using MAE and R²
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+# Display model evaluation results
+print("\nModel Performance on Test Data:")
+print("--------------------------------")
+print(f"- Mean Absolute Error (MAE): {mae:.2f} kg CO2")
+print(f"- R² Score: {r2:.2f}")
+
+# Get input from the user
+energy_kwh, travel_km, waste_kg = get_user_input()
+
+# Manually calculate emissions using known formula
+user_emissions = calculate_emissions(energy_kwh, travel_km, waste_kg)
+
+# Display manual calculation result
+print("\nYour estimated carbon footprint (calculated):")
+print("------------------------------------------------")
+print(f"{user_emissions:.2f} kg CO2 per month.")
+
+# Create DataFrame for user's input to feed into ML model
+user_data = pd.DataFrame({
+    'energy_kwh': [energy_kwh],
+    'travel_km': [travel_km],
+    'waste_kg': [waste_kg]
+})
+
+# Use trained model to predict emissions
+predicted_emission = model.predict(user_data)[0]
+
+# Display ML-predicted emissions
+print("\nAI-predicted carbon footprint (ML model):")
+print("-------------------------------------------")
+print(f"{predicted_emission:.2f} kg CO2 per month.")
+
+# Final message
+print("\nConclusion:")
+print("-----------")
+print("AI-driven modeling helps estimate and forecast carbon emissions with reasonable accuracy.")
+print("With more data and integration with IoT devices, the system can become even more powerful.")
